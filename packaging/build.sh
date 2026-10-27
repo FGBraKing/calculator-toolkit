@@ -49,4 +49,4 @@ case "$OS" in
   *) ARTIFACT="$ROOT/dist/CalculatorToolkit" ;;
 esac
 
-echo "完成（$OS）：$ARTIFACT  $(du -sh "$ARTIFACT" | cut -f1)"
+echo "完成 (${OS}): $ARTIFACT  $(du -sh "$ARTIFACT" | cut -f1)"
