@@ -219,7 +219,7 @@ class PensionResponse(BaseModel):
 
 app = FastAPI(
     title="计算工具集",
-    version="0.3.0",
+    version="0.3.1",
     docs_url="/api/docs",
     openapi_url="/api/openapi.json",
 )
