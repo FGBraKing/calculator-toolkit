@@ -41,27 +41,42 @@ uv run python -m app.main
 打开 <http://127.0.0.1:8765> 进入工具导航，再从卡片进入各工具。
 服务只监听回环地址，按 `Ctrl+C` 停止。
 
-### 打包成桌面 App（可选）
+### 打包成桌面 App
+
+PyInstaller 不能交叉编译，三个平台各自构建（`packaging/build.sh` 会自动识别系统）：
+
+| 平台 | 产物 | 说明 |
+|---|---|---|
+| macOS | `dist/CalculatorToolkit.app` | `--windowed`，双击启动、无终端窗口 |
+| Windows | `dist/CalculatorToolkit.exe` | `--noconsole`，在 Git Bash 里跑同一个脚本 |
+| Linux | `dist/CalculatorToolkit` | 单文件可执行 |
+
+CI 用三平台矩阵跑同一个脚本（`.github/workflows/desktop-build.yml`）：
 
 ```bash
-./packaging/build.sh        # 产物：dist/CalculatorToolkit.app
+gh workflow run desktop-build.yml          # 手动触发，产物在该次运行的 Artifacts 里
+git tag v0.4.0 && git push origin v0.4.0   # 打 tag 会自动建 Release 并附三个平台的压缩包
 ```
 
-- 双击 `dist/CalculatorToolkit.app` 即启动本地服务并自动打开浏览器。
-- 产物只有这一个 `.app`：PyInstaller 还会顺带生成一个裸可执行文件（双击会开终端、无 App 图标），
-  构建脚本在最后把它删掉。
-- 这个应用没有窗口，macOS 会把它登记为 BackgroundOnly，Dock 里通常不出现图标；
-  停止请用首页底部的「退出应用」按钮（仅打包版显示，点后服务在 0.3 秒内退出）。
+- 计费：macOS 分钟 ×10、Windows ×2，一次矩阵约 26 计费分钟（私有仓库每月 2000 分钟额度）。
+- macOS 产物是 arm64（Apple Silicon）；Intel Mac 需要另加 `macos-13` job。
+- Linux 产物依赖构建机的 glibc，老发行版可能跑不起来；Windows / macOS 未签名，
+  首次打开会被 SmartScreen / Gatekeeper 提示。
+
+本机细节：
+
+- 双击 `dist/CalculatorToolkit.app` 即启动本地服务并自动打开浏览器；产物只有 `.app`，
+  PyInstaller 顺带生成的裸可执行文件会被脚本删掉。
+- 应用没有窗口，macOS 会把它登记为 BackgroundOnly，Dock 里通常不出现图标；
+  停止请用首页底部的「退出应用」按钮（仅打包版显示，0.3 秒内退出）。
   关闭浏览器标签不会停止服务。
-- 实测体积：Hello World 的 PyInstaller onefile 为 **8.9 MB**——这就是 CPython 3.13 解释器 (
-  17 MB dylib) + 最小标准库 + 启动器压缩后的下限；本应用为 **16 MB**，多出的约 7 MB
+- 实测体积：Hello World 的 PyInstaller onefile 为 **8.9 MB**——这是 CPython 3.13
+  解释器 + 最小标准库 + 启动器压缩后的下限；本应用为 **16 MB**，多出的约 7 MB
   主要是 FastAPI 依赖栈（pydantic-core 4.5 MB、pydantic 3.6 MB 等，未压缩值）。
-- `--strip` 并排除 tkinter / unittest 等未用模块后为 **15 MB**；再想小只能换掉 FastAPI
-  （stdlib `http.server` 重写，估计 10–11 MB），代价是服务端与测试重写，不建议。
-- 注意：`--onefile --windowed` 在 PyInstaller 7 中会改为报错，届时改用 `--onedir`
+- `--strip` 并排除 tkinter / unittest 等未用模块后为 **15 MB**；再想小只能换掉 FastAPI。
+- 注意：`--onefile --windowed` 在 PyInstaller 7 中会改为报错，届时 macOS 改用 `--onedir`
   （启动更快、无需解压，但体积更大）。
-- 构建中间目录（`.build`、`PYINSTALLER_CONFIG_DIR`）都在任务目录内，可随时删除；
-  `dist/` 是构建产物，不必提交。
+- 构建中间目录（`.build`、`.pyinstaller`）都在任务目录内，可随时删除；`dist/` 不提交。
 
 ## 单利年化
 

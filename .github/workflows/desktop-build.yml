@@ -1,0 +1,78 @@
+name: desktop-build
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build (${{ matrix.slug }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            slug: macos
+          - os: windows-latest
+            slug: windows
+          - os: ubuntu-latest
+            slug: linux
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Build
+        shell: bash
+        run: ./packaging/build.sh
+
+      - name: Package artifact
+        shell: bash
+        run: |
+          mkdir -p out
+          case "${{ matrix.slug }}" in
+            macos)
+              ditto -c -k --sequesterRsrc --keepParent \
+                dist/CalculatorToolkit.app out/CalculatorToolkit-macos.zip
+              ;;
+            windows)
+              powershell -NoProfile -Command \
+                "Compress-Archive -Path 'dist/CalculatorToolkit.exe' -DestinationPath 'out/CalculatorToolkit-windows.zip' -Force"
+              ;;
+            linux)
+              tar -czf out/CalculatorToolkit-linux.tar.gz -C dist CalculatorToolkit
+              ;;
+          esac
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CalculatorToolkit-${{ matrix.slug }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes

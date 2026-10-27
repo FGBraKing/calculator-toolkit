@@ -328,6 +328,8 @@ def shutdown_app(request: Request) -> dict[str, bool]:
 
 
 def _stop_process() -> None:
+    if os.name == "nt":
+        os._exit(0)
     os.kill(os.getpid(), signal.SIGINT)
 
 

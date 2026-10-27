@@ -16,7 +16,7 @@
   --sans: "PingFang SC", "Hiragino Sans GB", "Source Han Sans SC", "Noto Sans SC",
     "Microsoft YaHei", sans-serif;
   --mono: "SF Mono", "Menlo", "Roboto Mono", "Cascadia Mono", "PingFang SC", monospace;
-  --seal: "Songti SC", "STSong", "Noto Serif SC", Georgia, serif;
+  --seal: "Songti SC", "STSong", "Noto Serif SC", "SimSun", Georgia, serif;
 }
 
 *,
