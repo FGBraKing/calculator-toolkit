@@ -58,7 +58,8 @@ gh workflow run desktop-build.yml          # 手动触发，产物在该次运�
 git tag v0.4.0 && git push origin v0.4.0   # 打 tag 会自动建 Release 并附三个平台的压缩包
 ```
 
-- 计费：macOS 分钟 ×10、Windows ×2，一次矩阵约 26 计费分钟（私有仓库每月 2000 分钟额度）。
+- 计费：macOS 分钟 ×10、Windows ×2；实测三个 job 各 40–65 秒，按向上取整约 15 计费分钟/次
+  （私有仓库每月 2000 分钟额度）。最近一次运行：macOS 40s、Windows 1m05s、Linux 41s。
 - macOS 产物是 arm64（Apple Silicon）；Intel Mac 需要另加 `macos-13` job。
 - Linux 产物依赖构建机的 glibc，老发行版可能跑不起来；Windows / macOS 未签名，
   首次打开会被 SmartScreen / Gatekeeper 提示。
