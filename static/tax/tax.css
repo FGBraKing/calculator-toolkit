@@ -1,0 +1,12 @@
+/* 个税计算页的局部样式；基础版式复用 styles.css 的账页体系。 */
+
+.site-head {
+  max-width: 72ch;
+}
+
+@media (max-width: 560px) {
+  .tax-col-income,
+  .tax-col-deduction {
+    display: none;
+  }
+}

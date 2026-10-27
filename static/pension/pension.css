@@ -1,0 +1,39 @@
+/* 养老金计算页的局部样式；基础版式复用 styles.css 的账页体系。 */
+
+.site-head {
+  max-width: 72ch;
+}
+
+.metrics--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metrics--three .metric dd {
+  font-size: 16px;
+}
+
+.concession-line.is-warning {
+  color: var(--error);
+}
+
+.concession-line.is-warning .concession-tag {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+@media (max-width: 560px) {
+  .metrics--three {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 4px 0 8px;
+  }
+
+  .metrics--three .metric {
+    padding: 10px 0;
+  }
+
+  .metrics--three .metric + .metric {
+    padding-left: 0;
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+}

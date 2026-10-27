@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e6eae3">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'"
+  >
+  <title>计算工具集</title>
+  <meta
+    name="description"
+    content="十五个本机计算工具：单利年化、存款利息、税后工资、房贷、公积金贷款、提前还款、个税、契税、房产税、二手房税费、养老金、退休年龄、产假、育儿补贴与出生时长。"
+  >
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="site-head">
+      <div class="brand">
+        <span class="brand-seal" aria-hidden="true">算</span>
+        <h1>计算工具集</h1>
+      </div>
+      <p class="lede">十五个常用计算，账页式排版，输入只在本机处理。</p>
+    </header>
+
+    {% for group in groups %}
+    <section class="home-group" aria-labelledby="group-{{ loop.index }}">
+      <h2 class="home-group-title" id="group-{{ loop.index }}">{{ group.title }}</h2>
+      <div class="home">
+        {% for tool in group.tools %}
+        <a class="tool-card" href="{{ tool.href }}">
+          <div class="tool-card-head">
+            <span class="brand-seal" aria-hidden="true">{{ tool.seal }}</span>
+            <h3>{{ tool.title }}</h3>
+          </div>
+          <p>{{ tool.desc }}</p>
+          <p class="tool-card-meta">{{ tool.meta }}</p>
+          <span class="tool-card-enter">进入 →</span>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endfor %}
+
+    <footer class="site-foot">
+      <p>输入仅在本机处理，不会上传。</p>
+      {% if packaged %}
+      <p class="app-control">
+        <button type="button" class="app-quit" id="shutdown">退出应用</button>
+        <span id="shutdown-note">关闭浏览器不会停止服务；退出请点左侧按钮。</span>
+      </p>
+      {% endif %}
+    </footer>
+  </div>
+  <script src="home.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e6eae3">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'"
+  >
+  <title>个税计算 · 计算工具集</title>
+  <meta
+    name="description"
+    content="按综合所得年度汇算口径计算居民个人工资薪金个税：基本减除、三险一金、专项附加扣除、个人养老金、年终奖单独或并入计税，以及每月累计预扣明细。"
+  >
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="tax.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="site-head">
+      <div class="brand">
+        <span class="brand-seal" aria-hidden="true">税</span>
+        <h1>个税计算</h1>
+      </div>
+      <p class="lede">工资薪金年度汇算：专项附加扣除、年终奖对比与每月预扣一次算清。</p>
+      <nav class="tool-nav" aria-label="计算工具">
+        <a href="../">← 工具集</a>
+        <span class="tool-nav-current">个税计算</span>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="sheet-page input-page" aria-labelledby="input-heading">
+        <div class="page-head">
+          <h2 id="input-heading">收入与扣除</h2>
+        </div>
+
+        <form id="tax-form" novalidate>
+          <div class="ledger" role="group" aria-label="收入">
+            <p class="ledger-section">收入</p>
+
+            <div class="ledger-row" data-field="income">
+              <div class="ledger-label">
+                <label for="income" id="income-label">月收入</label>
+                <div class="mini-switch" id="basis-switch" role="group" aria-label="收入口径">
+                  <button type="button" class="mini-button" data-basis="month" aria-pressed="true">月薪</button>
+                  <button type="button" class="mini-button" data-basis="year" aria-pressed="false">年薪</button>
+                </div>
+              </div>
+              <div class="ledger-entry">
+                <input
+                  id="income"
+                  name="income"
+                  type="text"
+                  inputmode="decimal"
+                  value="20000"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="income-error"
+                >
+                <span class="unit" id="income-unit">元/月</span>
+              </div>
+              <p class="field-error" id="income-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="bonus">
+              <label for="bonus">年终奖</label>
+              <div class="ledger-entry">
+                <input
+                  id="bonus"
+                  name="bonus"
+                  type="text"
+                  inputmode="decimal"
+                  value="60000"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="bonus-error"
+                >
+                <span class="unit">元</span>
+              </div>
+              <p class="field-error" id="bonus-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="bonus_mode">
+              <label for="bonus-mode-separate">计税方式</label>
+              <div class="ledger-entry">
+                <div class="mini-switch" role="group" aria-label="年终奖计税方式">
+                  <button type="button" class="mini-button" id="bonus-mode-separate" data-bonus-mode="separate" aria-pressed="true">单独计税</button>
+                  <button type="button" class="mini-button" data-bonus-mode="combined" aria-pressed="false">并入综合所得</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ledger" role="group" aria-label="扣除">
+            <p class="ledger-section">扣除</p>
+
+            <div class="ledger-row" data-field="social">
+              <label for="social">三险一金（个人）</label>
+              <div class="ledger-entry">
+                <input
+                  id="social"
+                  name="social"
+                  type="text"
+                  inputmode="decimal"
+                  value="3000"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="social-error duration-hint"
+                >
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="social-error" role="alert"></p>
+            </div>
+
+            <p class="ledger-section">专项附加扣除（元/月）</p>
+
+            <div class="ledger-row" data-field="child_education">
+              <label for="child-education">子女教育</label>
+              <div class="ledger-entry">
+                <input id="child-education" name="child_education" type="text" inputmode="decimal" value="2000" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="child-education-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="child-education-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="infant_care">
+              <label for="infant-care">婴幼儿照护</label>
+              <div class="ledger-entry">
+                <input id="infant-care" name="infant_care" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="infant-care-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="infant-care-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="continuing_education">
+              <label for="continuing-education">继续教育</label>
+              <div class="ledger-entry">
+                <input id="continuing-education" name="continuing_education" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="continuing-education-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="continuing-education-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="mortgage_interest">
+              <label for="mortgage-interest">住房贷款利息</label>
+              <div class="ledger-entry">
+                <input id="mortgage-interest" name="mortgage_interest" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="mortgage-interest-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="mortgage-interest-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="housing_rent">
+              <label for="housing-rent">住房租金</label>
+              <div class="ledger-entry">
+                <input id="housing-rent" name="housing_rent" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="housing-rent-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="housing-rent-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="elderly_support">
+              <label for="elderly-support">赡养老人</label>
+              <div class="ledger-entry">
+                <input id="elderly-support" name="elderly_support" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="elderly-support-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="elderly-support-error" role="alert"></p>
+            </div>
+
+            <p class="ledger-section">年度扣除（元/年）</p>
+
+            <div class="ledger-row" data-field="serious_illness">
+              <label for="serious-illness">大病医疗自付</label>
+              <div class="ledger-entry">
+                <input id="serious-illness" name="serious_illness" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="serious-illness-error illness-hint">
+                <span class="unit">元/年</span>
+              </div>
+              <p class="field-error" id="serious-illness-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="pension">
+              <label for="pension">个人养老金</label>
+              <div class="ledger-entry">
+                <input id="pension" name="pension" type="text" inputmode="decimal" value="0" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="pension-error pension-hint">
+                <span class="unit">元/年</span>
+              </div>
+              <p class="field-error" id="pension-error" role="alert"></p>
+            </div>
+          </div>
+
+          <p class="ledger-hint" id="duration-hint">
+            专项附加扣除按本人可享受的月度金额填写（多子女、非独生子女分摊按本人份额合并）。
+          </p>
+          <p class="ledger-hint" id="illness-hint">
+            大病医疗：医保目录内自付超过 15,000 元的部分可扣，限额 80,000 元，汇算时申报。
+          </p>
+          <p class="ledger-hint" id="pension-hint">
+            个人养老金：每年最多扣除 12,000 元，汇算时申报。
+          </p>
+
+          <button class="submit" id="submit-button" type="submit">计算个税</button>
+          <p class="form-foot">综合所得年度汇算口径；年终奖单独计税另列对比。</p>
+        </form>
+      </section>
+
+      <div class="sheet-rule" aria-hidden="true"><span class="equation-mark">=</span></div>
+
+      <section
+        class="sheet-page result-page"
+        id="result-panel"
+        aria-labelledby="result-heading"
+        aria-busy="false"
+      >
+        <div class="page-head">
+          <h2 id="result-heading">全年应纳税额</h2>
+          <p class="result-status" id="result-status">准备计算</p>
+        </div>
+
+        <div class="rate-block" id="tax-block">
+          <span class="rate-number rate-number--money" id="total-tax">—</span>
+          <span class="rate-unit">元</span>
+        </div>
+
+        <div class="irr-line" id="net-line">
+          <span class="irr-label">税后收入</span>
+          <span class="irr-value" id="net-income">—</span>
+          <span class="irr-relation" id="effective-rate-label">—</span>
+        </div>
+
+        <p class="concession-line" id="bonus-line" hidden>
+          <span class="concession-tag">年终奖</span>
+          <span id="bonus-text">—</span>
+        </p>
+
+        <dl class="metrics">
+          <div class="metric">
+            <dt>应纳税所得额</dt>
+            <dd id="taxable-income">—</dd>
+          </div>
+          <div class="metric">
+            <dt>边际税率</dt>
+            <dd id="marginal-rate">—</dd>
+          </div>
+        </dl>
+
+        <div class="formula-block">
+          <p class="formula-label">计算式</p>
+          <pre id="formula" aria-label="个税计算公式与代入过程">填写参数后计算</pre>
+        </div>
+
+        <p class="mode-note" id="tax-note">按综合所得年度汇算口径计算。</p>
+        <p class="result-error" id="result-error" role="alert"></p>
+        <p class="result-foot">
+          <span class="result-foot-label">口径</span>
+          居民个人综合所得年度汇算：基本减除 60,000 元/年，专项附加扣除按月合计，
+          住房贷款利息与住房租金不得同时享受。税额保留两位小数。
+        </p>
+      </section>
+    </main>
+
+    <section
+      class="schedule-sheet"
+      id="schedule-section"
+      aria-labelledby="schedule-heading"
+    >
+      <div class="schedule-head">
+        <div>
+          <h2 id="schedule-heading">每月预扣明细</h2>
+          <p class="schedule-meta" id="schedule-meta">—</p>
+        </div>
+        <button
+          class="schedule-toggle"
+          id="schedule-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="schedule-body"
+        >收起明细</button>
+      </div>
+
+      <div class="schedule-body" id="schedule-body">
+        <dl class="schedule-totals">
+          <div class="schedule-total">
+            <dt>预扣合计</dt>
+            <dd id="schedule-total-tax">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>全年收入</dt>
+            <dd id="schedule-total-income">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>全年扣除</dt>
+            <dd id="schedule-total-deduction">—</dd>
+          </div>
+        </dl>
+
+        <div class="schedule-table-wrap" id="schedule-table-wrap">
+          <table class="schedule-table">
+            <caption class="visually-hidden">每月累计预扣预缴税额明细</caption>
+            <thead>
+              <tr>
+                <th scope="col">月份</th>
+                <th scope="col" class="tax-col-income">累计收入</th>
+                <th scope="col" class="tax-col-deduction">累计扣除</th>
+                <th scope="col">累计应纳税所得</th>
+                <th scope="col">当月预扣</th>
+                <th scope="col">累计预扣</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body-rows"></tbody>
+          </table>
+        </div>
+        <p class="schedule-note">金额单位：元；按累计所得查年度税率表，再减去已预扣税额。</p>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <p>输入仅在本机处理，不会上传。</p>
+    </footer>
+  </div>
+
+  <p class="visually-hidden" id="live-status" aria-live="polite"></p>
+  <script src="tax.js" defer></script>
+</body>
+</html>

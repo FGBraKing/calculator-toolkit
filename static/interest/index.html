@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e6eae3">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'"
+  >
+  <title>单利年化 · 五种还款方式</title>
+  <meta
+    name="description"
+    content="输入总本金、总利息或每期还款、总期数和每期时长，按等额本息、等额本金、先息后本、等本等息或到期一次还本付息计算合同年化与实际 IRR。"
+  >
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="site-head">
+      <div class="brand">
+        <span class="brand-seal" aria-hidden="true">利</span>
+        <h1>单利年化</h1>
+      </div>
+      <p class="lede">五种常见还款方式，合同单利、实际 IRR 与每期明细一起看。</p>
+      <nav class="tool-nav" aria-label="计算工具">
+        <a href="../">← 工具集</a>
+        <span class="tool-nav-current">单利年化</span>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="sheet-page input-page" aria-labelledby="input-heading">
+        <div class="page-head">
+          <h2 id="input-heading">计息参数</h2>
+        </div>
+
+        <form id="calc-form" novalidate>
+          <fieldset class="mode-set">
+            <legend class="field-label">还款方式</legend>
+            <div class="mode-options">
+              <label class="mode-option">
+                <input class="mode-input" type="radio" name="mode" value="equal_installment">
+                <span class="mode-indicator" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <span class="mode-title">等额本息</span>
+                  <span class="mode-desc">每期还款额相同</span>
+                </span>
+              </label>
+              <label class="mode-option">
+                <input class="mode-input" type="radio" name="mode" value="equal_principal">
+                <span class="mode-indicator" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <span class="mode-title">等额本金</span>
+                  <span class="mode-desc">每期本金相同，利息递减</span>
+                </span>
+              </label>
+              <label class="mode-option">
+                <input class="mode-input" type="radio" name="mode" value="interest_only" checked>
+                <span class="mode-indicator" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <span class="mode-title">先息后本</span>
+                  <span class="mode-desc">每期只付利息，到期还本</span>
+                </span>
+              </label>
+              <label class="mode-option">
+                <input class="mode-input" type="radio" name="mode" value="flat_rate">
+                <span class="mode-indicator" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <span class="mode-title">等本等息</span>
+                  <span class="mode-desc">本金平摊，利息不变</span>
+                </span>
+              </label>
+              <label class="mode-option mode-option--wide">
+                <input class="mode-input" type="radio" name="mode" value="simple_bullet">
+                <span class="mode-indicator" aria-hidden="true"></span>
+                <span class="mode-copy">
+                  <span class="mode-title">到期一次还本付息</span>
+                  <span class="mode-desc">期末一次结清本息</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="ledger" role="group" aria-label="计息输入">
+            <div class="ledger-row" data-field="principal">
+              <label for="principal">总本金</label>
+              <div class="ledger-entry">
+                <input
+                  id="principal"
+                  name="principal"
+                  type="text"
+                  inputmode="decimal"
+                  value="100000"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="principal-error"
+                >
+                <span class="unit">元</span>
+              </div>
+              <p class="field-error" id="principal-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="interest">
+              <div class="ledger-label">
+                <label for="interest" id="interest-label">总利息</label>
+                <div
+                  class="mini-switch basis-switch"
+                  id="basis-switch"
+                  role="group"
+                  aria-label="利息输入口径"
+                  hidden
+                >
+                  <button type="button" class="mini-button" data-basis="interest" aria-pressed="true">总利息</button>
+                  <button type="button" class="mini-button" data-basis="payment" aria-pressed="false">每期还款</button>
+                </div>
+              </div>
+              <div class="ledger-entry">
+                <input
+                  id="interest"
+                  name="interest"
+                  type="text"
+                  inputmode="decimal"
+                  value="3650"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="interest-error"
+                >
+                <span class="unit" id="interest-unit">元</span>
+              </div>
+              <p class="field-error" id="interest-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="periods">
+              <label for="periods">总期数</label>
+              <div class="ledger-entry">
+                <input
+                  id="periods"
+                  name="periods"
+                  type="text"
+                  inputmode="numeric"
+                  value="12"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="periods-error"
+                >
+                <span class="unit">期</span>
+              </div>
+              <p class="field-error" id="periods-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="period_value">
+              <label for="period-value">每期时长</label>
+              <div class="ledger-entry ledger-entry--duration">
+                <input
+                  id="period-value"
+                  name="period_value"
+                  type="text"
+                  inputmode="decimal"
+                  value="1"
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="period-value-error duration-hint"
+                >
+                <div class="mini-switch" role="group" aria-label="每期时长单位">
+                  <button type="button" class="mini-button" data-unit="year" aria-pressed="false">年</button>
+                  <button type="button" class="mini-button" data-unit="quarter" aria-pressed="false">季</button>
+                  <button type="button" class="mini-button" data-unit="month" aria-pressed="true">月</button>
+                  <button type="button" class="mini-button" data-unit="day" aria-pressed="false">日</button>
+                </div>
+              </div>
+              <p class="field-error" id="period-value-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="concession">
+              <label for="concession-type">利息优惠</label>
+              <div class="ledger-entry">
+                <select id="concession-type" name="concession">
+                  <option value="none" selected>无优惠</option>
+                  <option value="full_waiver">全额免息</option>
+                  <option value="first_periods">前 N 期免息</option>
+                  <option value="amount">定额减免</option>
+                  <option value="rate_discount">利率折扣</option>
+                </select>
+                <span class="unit select-caret" aria-hidden="true">▾</span>
+              </div>
+              <p class="field-error" id="concession-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="concession_value" id="concession-value-row" hidden>
+              <label for="concession-value" id="concession-value-label">免息期数</label>
+              <div class="ledger-entry">
+                <input
+                  id="concession-value"
+                  name="concession_value"
+                  type="text"
+                  inputmode="decimal"
+                  value=""
+                  maxlength="40"
+                  autocomplete="off"
+                  spellcheck="false"
+                  aria-describedby="concession-value-error concession-hint"
+                >
+                <span class="unit" id="concession-value-unit">期</span>
+              </div>
+              <p class="field-error" id="concession-value-error" role="alert"></p>
+            </div>
+          </div>
+
+          <p class="ledger-hint" id="duration-hint">
+            单位可切换；1 年 = 12 月 = 4 季 = 365 天。数值支持小数。
+          </p>
+          <p class="ledger-hint" id="concession-hint">
+            减免类优惠不改变合同利率，只减少实际收取的利息。
+          </p>
+
+          <button class="submit" id="submit-button" type="submit">计算年化</button>
+          <p class="form-foot">合同单利 = 期利率 ÷ 每期年数；实际 IRR 另列。</p>
+        </form>
+      </section>
+
+      <div class="sheet-rule" aria-hidden="true"><span class="equation-mark">=</span></div>
+
+      <section
+        class="sheet-page result-page"
+        id="result-panel"
+        aria-labelledby="result-heading"
+        aria-busy="false"
+      >
+        <div class="page-head">
+          <h2 id="result-heading">合同年化单利</h2>
+          <p class="result-status" id="result-status">准备计算</p>
+        </div>
+
+        <div class="rate-block" id="rate-block">
+          <span class="rate-number" id="annual-rate">—</span>
+          <span class="rate-unit">%</span>
+        </div>
+
+        <div class="irr-line" id="irr-line">
+          <span class="irr-label">实际年化（IRR）</span>
+          <span class="irr-value" id="irr-rate">—</span>
+          <span class="irr-relation" id="irr-relation">—</span>
+        </div>
+
+        <p class="concession-line" id="concession-line" hidden>
+          <span class="concession-tag">利息优惠</span>
+          <span id="concession-text">—</span>
+        </p>
+
+        <dl class="metrics">
+          <div class="metric">
+            <dt>每期利率</dt>
+            <dd id="period-rate">—</dd>
+          </div>
+          <div class="metric">
+            <dt>总期限</dt>
+            <dd id="total-years">—</dd>
+          </div>
+        </dl>
+
+        <div class="formula-block">
+          <p class="formula-label">计算式</p>
+          <pre id="formula" aria-label="年化计算公式与代入过程">填写参数后计算</pre>
+        </div>
+
+        <p class="mode-note" id="mode-note">按所选方式折算合同单利与实际 IRR。</p>
+        <p class="result-error" id="result-error" role="alert"></p>
+        <p class="result-foot">
+          <span class="result-foot-label">口径</span>
+          合同单利按该方式的合同计息规则折算；实际 IRR 按每期现金流反解。
+          两者均为名义年化（期利率 ÷ 每期年数），结果保留四位小数。
+        </p>
+      </section>
+    </main>
+
+    <section
+      class="schedule-sheet"
+      id="schedule-section"
+      aria-labelledby="schedule-heading"
+      hidden
+    >
+      <div class="schedule-head">
+        <div>
+          <h2 id="schedule-heading">每期明细</h2>
+          <p class="schedule-meta" id="schedule-meta">—</p>
+        </div>
+        <button
+          class="schedule-toggle"
+          id="schedule-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="schedule-body"
+        >收起明细</button>
+      </div>
+
+      <div class="schedule-body" id="schedule-body">
+        <dl class="schedule-totals">
+          <div class="schedule-total">
+            <dt>还款合计</dt>
+            <dd id="schedule-total-payment">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>本金合计</dt>
+            <dd id="schedule-total-principal">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>利息合计</dt>
+            <dd id="schedule-total-interest">—</dd>
+          </div>
+        </dl>
+
+        <div class="schedule-table-wrap" id="schedule-table-wrap">
+          <table class="schedule-table">
+            <caption class="visually-hidden">每期还款的本金、利息与剩余本金</caption>
+            <thead>
+              <tr>
+                <th scope="col">期次</th>
+                <th scope="col" class="schedule-col-payment">还款</th>
+                <th scope="col">本金</th>
+                <th scope="col">利息</th>
+                <th scope="col">期末剩余</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body-rows"></tbody>
+          </table>
+        </div>
+        <p class="schedule-note">金额单位：元；最后一期吸收分位尾差，分项合计与本金合计、利息合计一致。</p>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <p>输入仅在本机处理，不会上传。</p>
+    </footer>
+  </div>
+
+  <p class="visually-hidden" id="live-status" aria-live="polite"></p>
+  <script src="app.js" defer></script>
+</body>
+</html>

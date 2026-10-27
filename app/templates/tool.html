@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e6eae3">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'"
+  >
+  <title>{{ tool.title }} · 计算工具集</title>
+  <meta name="description" content="{{ tool.desc }}">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../toolkit/tool.css">
+</head>
+<body data-tool="{{ tool.slug }}">
+  <div class="frame">
+    <header class="site-head">
+      <div class="brand">
+        <span class="brand-seal" aria-hidden="true">{{ tool.seal }}</span>
+        <h1>{{ tool.title }}</h1>
+      </div>
+      <p class="lede">{{ tool.lede }}</p>
+      <nav class="tool-nav" aria-label="计算工具">
+        <a href="../">← 工具集</a>
+        <span class="tool-nav-current">{{ tool.title }}</span>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="sheet-page input-page" aria-labelledby="input-heading">
+        <div class="page-head">
+          <h2 id="input-heading">{{ tool.heading }}</h2>
+        </div>
+
+        <form id="tool-form" novalidate>
+          <div class="ledger" role="group" aria-label="{{ tool.heading }}">
+            {% for row in tool.rows %}
+              {% if row.kind == "section" %}
+                <p class="ledger-section">{{ row.label }}</p>
+              {% elif row.kind == "select" %}
+                <div class="ledger-row" data-field="{{ row.name }}">
+                  <label for="{{ row.name }}">{{ row.label }}</label>
+                  <div class="ledger-entry">
+                    <select id="{{ row.name }}" name="{{ row.name }}">
+                      <option value="">自定义（手动填写）</option>
+                    </select>
+                    <span class="unit select-caret" aria-hidden="true">▾</span>
+                  </div>
+                </div>
+              {% elif row.kind == "switch" %}
+                <div
+                  class="ledger-row"
+                  data-field="{{ row.name }}"
+                  {% if row.show_when %}data-show-when="{{ row.show_when }}"{% endif %}
+                >
+                  <label id="{{ row.name }}-label">{{ row.label }}</label>
+                  <div class="ledger-entry">
+                    <div
+                      class="mini-switch"
+                      data-switch="{{ row.name }}"
+                      role="group"
+                      aria-labelledby="{{ row.name }}-label"
+                      {% if row.unit_target %}data-unit-target="{{ row.unit_target }}"{% endif %}
+                    >
+                      {% for option in row.options %}
+                        <button
+                          type="button"
+                          class="mini-button"
+                          data-value="{{ option.value }}"
+                          aria-pressed="{{ 'true' if option.value == row['default'] else 'false' }}"
+                          {% if option.unit_label %}data-unit-label="{{ option.unit_label }}"{% endif %}
+                        >{{ option.label }}</button>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                <div
+                  class="ledger-row"
+                  data-field="{{ row.name }}"
+                  {% if row.show_when %}data-show-when="{{ row.show_when }}"{% endif %}
+                >
+                  <label for="{{ row.name }}">{{ row.label }}</label>
+                  <div class="ledger-entry">
+                    <input
+                      id="{{ row.name }}"
+                      name="{{ row.name }}"
+                      type="{{ 'date' if row.input == 'date' else 'text' }}"
+                      {% if row.input != 'date' %}inputmode="{{ 'numeric' if row.input == 'int' else 'decimal' }}"{% endif %}
+                      value="{{ row.value }}"
+                      maxlength="40"
+                      autocomplete="off"
+                      spellcheck="false"
+                      data-kind="{{ row.input }}"
+                      data-label="{{ row.label }}"
+                      {% if row.min is defined %}data-min="{{ row.min }}"{% endif %}
+                      {% if row.max is defined %}data-max="{{ row.max }}"{% endif %}
+                      aria-describedby="{{ row.name }}-error"
+                    >
+                    {% if row.unit %}<span class="unit">{{ row.unit }}</span>{% endif %}
+                  </div>
+                  <p class="field-error" id="{{ row.name }}-error" role="alert"></p>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          <p class="ledger-hint" id="tool-hint" hidden></p>
+          {% for hint in tool.hints %}
+          <p class="ledger-hint">{{ hint }}</p>
+          {% endfor %}
+
+          <button class="submit" id="submit-button" type="submit">{{ tool.submit }}</button>
+          <p class="form-foot">{{ tool.foot }}</p>
+        </form>
+      </section>
+
+      <div class="sheet-rule" aria-hidden="true"><span class="equation-mark">=</span></div>
+
+      <section
+        class="sheet-page result-page"
+        id="result-panel"
+        aria-labelledby="result-heading"
+        aria-busy="false"
+      >
+        <div class="page-head">
+          <h2 id="result-heading">{{ tool.result_heading }}</h2>
+          <p class="result-status" id="result-status">准备计算</p>
+        </div>
+
+        <div class="rate-block" id="primary-block">
+          <span class="rate-number rate-number--money" id="primary">—</span>
+          <span class="rate-unit" id="primary-unit">{{ tool.primary_unit }}</span>
+        </div>
+
+        <p class="concession-line" id="fact-line" hidden>
+          <span class="concession-tag">{{ tool.fact_tag }}</span>
+          <span id="fact-text">—</span>
+        </p>
+
+        <dl class="metrics" id="metrics"></dl>
+
+        <div class="formula-block">
+          <p class="formula-label">计算式</p>
+          <pre id="formula" aria-label="计算公式与代入过程">填写参数后计算</pre>
+        </div>
+
+        <p class="mode-note" id="note">{{ tool.initial_note }}</p>
+        <p class="result-error" id="result-error" role="alert"></p>
+        <p class="result-foot">
+          <span class="result-foot-label">口径</span>{{ tool.foot }}
+        </p>
+      </section>
+    </main>
+
+    <section
+      class="schedule-sheet"
+      id="schedule-section"
+      aria-labelledby="schedule-heading"
+      hidden
+    >
+      <div class="schedule-head">
+        <div>
+          <h2 id="schedule-heading">{{ tool.schedule_title or "计算明细" }}</h2>
+          <p class="schedule-meta" id="schedule-meta">—</p>
+        </div>
+        <button
+          class="schedule-toggle"
+          id="schedule-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="schedule-body"
+        >收起明细</button>
+      </div>
+
+      <div class="schedule-body" id="schedule-body">
+        <dl class="schedule-totals" id="schedule-totals"></dl>
+
+        <div class="schedule-table-wrap" id="schedule-table-wrap">
+          <table class="schedule-table">
+            <caption class="visually-hidden">逐期明细</caption>
+            <thead>
+              <tr id="schedule-head-row"></tr>
+            </thead>
+            <tbody id="schedule-body-rows"></tbody>
+          </table>
+        </div>
+        <p class="schedule-note" id="schedule-note"></p>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <p>输入仅在本机处理，不会上传。</p>
+    </footer>
+  </div>
+
+  <p class="visually-hidden" id="live-status" aria-live="polite"></p>
+  <script src="../toolkit/tool.js" defer></script>
+  {% if tool.script %}<script src="../toolkit/{{ tool.script }}" defer></script>{% endif %}
+</body>
+</html>

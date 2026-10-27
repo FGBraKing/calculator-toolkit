@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#e6eae3">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; object-src 'none'"
+  >
+  <title>养老金计算 · 计算工具集</title>
+  <meta
+    name="description"
+    content="按城镇职工与城乡居民两轨基本养老保险口径估算月养老金：基础养老金、个人账户储存额、计发月数与缴费年限，地区参数可自行调整。"
+  >
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="pension.css">
+</head>
+<body>
+  <div class="frame">
+    <header class="site-head">
+      <div class="brand">
+        <span class="brand-seal" aria-hidden="true">养</span>
+        <h1>养老金计算</h1>
+      </div>
+      <p class="lede">职工与居民两轨基本养老金估算：基础养老金、个人账户与计发月数。</p>
+      <nav class="tool-nav" aria-label="计算工具">
+        <a href="../">← 工具集</a>
+        <span class="tool-nav-current">养老金</span>
+      </nav>
+    </header>
+
+    <main class="sheet">
+      <section class="sheet-page input-page" aria-labelledby="input-heading">
+        <div class="page-head">
+          <h2 id="input-heading">参保参数</h2>
+        </div>
+
+        <form id="pension-form" novalidate>
+          <div class="ledger" role="group" aria-label="参保口径">
+            <div class="ledger-row" data-field="track">
+              <label for="track-employee">参保类型</label>
+              <div class="ledger-entry">
+                <div class="mini-switch" role="group" aria-label="参保类型">
+                  <button type="button" class="mini-button" id="track-employee" data-track="employee" aria-pressed="true">职工养老</button>
+                  <button type="button" class="mini-button" data-track="resident" aria-pressed="false">居民养老</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ledger" id="employee-fields" role="group" aria-label="职工养老参数">
+            <p class="ledger-section">职工基本养老保险</p>
+
+            <div class="ledger-row" data-field="region">
+              <label for="region">所在地区</label>
+              <div class="ledger-entry">
+                <select id="region" name="region">
+                  <option value="">自定义（手动填写）</option>
+                </select>
+                <span class="unit select-caret" aria-hidden="true">▾</span>
+              </div>
+            </div>
+
+            <div class="ledger-row" data-field="paid_years">
+              <label for="paid-years">已缴费年限</label>
+              <div class="ledger-entry">
+                <input id="paid-years" name="paid_years" type="text" inputmode="numeric" value="5" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="paid-years-error">
+                <span class="unit">年</span>
+              </div>
+              <p class="field-error" id="paid-years-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="remaining_years">
+              <label for="remaining-years">距退休年数</label>
+              <div class="ledger-entry">
+                <input id="remaining-years" name="remaining_years" type="text" inputmode="numeric" value="30" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="remaining-years-error">
+                <span class="unit">年</span>
+              </div>
+              <p class="field-error" id="remaining-years-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="retirement_age">
+              <label for="retirement-age">退休年龄</label>
+              <div class="ledger-entry">
+                <input id="retirement-age" name="retirement_age" type="text" inputmode="numeric" value="60" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="retirement-age-error">
+                <span class="unit">岁</span>
+              </div>
+              <p class="field-error" id="retirement-age-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="base">
+              <label for="base">月缴费基数</label>
+              <div class="ledger-entry">
+                <input id="base" name="base" type="text" inputmode="decimal" value="10000" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="base-error">
+                <span class="unit">元</span>
+              </div>
+              <p class="field-error" id="base-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="social">
+              <label for="social">当地社平 / 计发基数</label>
+              <div class="ledger-entry">
+                <input id="social" name="social" type="text" inputmode="decimal" value="8000" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="social-error region-hint">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="social-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="growth">
+              <label for="growth">社平工资年增长</label>
+              <div class="ledger-entry">
+                <input id="growth" name="growth" type="text" inputmode="decimal" value="3" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="growth-error">
+                <span class="unit">%</span>
+              </div>
+              <p class="field-error" id="growth-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="balance">
+              <label for="balance">个人账户现有余额</label>
+              <div class="ledger-entry">
+                <input id="balance" name="balance" type="text" inputmode="decimal" value="50000" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="balance-error">
+                <span class="unit">元</span>
+              </div>
+              <p class="field-error" id="balance-error" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="ledger" id="resident-fields" role="group" aria-label="居民养老参数" hidden>
+            <p class="ledger-section">城乡居民基本养老保险</p>
+
+            <div class="ledger-row" data-field="years">
+              <label for="years">缴费年限</label>
+              <div class="ledger-entry">
+                <input id="years" name="years" type="text" inputmode="numeric" value="15" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="years-error">
+                <span class="unit">年</span>
+              </div>
+              <p class="field-error" id="years-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="contribution">
+              <label for="contribution">每年个人缴费</label>
+              <div class="ledger-entry">
+                <input id="contribution" name="contribution" type="text" inputmode="decimal" value="1000" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="contribution-error">
+                <span class="unit">元/年</span>
+              </div>
+              <p class="field-error" id="contribution-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="subsidy">
+              <label for="subsidy">每年政府补贴</label>
+              <div class="ledger-entry">
+                <input id="subsidy" name="subsidy" type="text" inputmode="decimal" value="60" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="subsidy-error">
+                <span class="unit">元/年</span>
+              </div>
+              <p class="field-error" id="subsidy-error" role="alert"></p>
+            </div>
+
+            <div class="ledger-row" data-field="base_pension">
+              <label for="base-pension">当地基础养老金</label>
+              <div class="ledger-entry">
+                <input id="base-pension" name="base_pension" type="text" inputmode="decimal" value="143" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="base-pension-error">
+                <span class="unit">元/月</span>
+              </div>
+              <p class="field-error" id="base-pension-error" role="alert"></p>
+            </div>
+          </div>
+
+          <div class="ledger" role="group" aria-label="记账利率">
+            <div class="ledger-row" data-field="rate">
+              <label for="rate">个人账户记账利率</label>
+              <div class="ledger-entry">
+                <input id="rate" name="rate" type="text" inputmode="decimal" value="3" maxlength="40" autocomplete="off" spellcheck="false" aria-describedby="rate-error">
+                <span class="unit">%</span>
+              </div>
+              <p class="field-error" id="rate-error" role="alert"></p>
+            </div>
+          </div>
+
+          <p class="ledger-hint" id="employee-hint">
+            职工：缴费基数为本人上年度月平均工资，须在当地社平工资的 60%–300% 之间；
+            退休年龄按所在地执行的法定退休年龄填写（2025 年起实施渐进式延迟退休）。
+          </p>
+          <p class="ledger-hint" id="region-hint"></p>
+          <p class="ledger-hint" id="resident-hint" hidden>
+            居民：基础养老金为地方标准（全国最低标准 2025 年为 143 元/月），
+            缴费补贴与记账利率由各省确定；60 岁起按月领取。
+          </p>
+          <p class="ledger-hint" id="common-hint">
+            个人账户按 8%（职工）或缴费加补贴（居民）计入，按记账利率滚存，当年划入不计当年利息。
+          </p>
+
+          <button class="submit" id="submit-button" type="submit">计算养老金</button>
+          <p class="form-foot">两轨制度分别测算；过渡性养老金与职业年金未计入。</p>
+        </form>
+      </section>
+
+      <div class="sheet-rule" aria-hidden="true"><span class="equation-mark">=</span></div>
+
+      <section
+        class="sheet-page result-page"
+        id="result-panel"
+        aria-labelledby="result-heading"
+        aria-busy="false"
+      >
+        <div class="page-head">
+          <h2 id="result-heading">月养老金</h2>
+          <p class="result-status" id="result-status">准备计算</p>
+        </div>
+
+        <div class="rate-block" id="pension-block">
+          <span class="rate-number rate-number--money" id="monthly-total">—</span>
+          <span class="rate-unit">元</span>
+        </div>
+
+        <div class="irr-line" id="account-line">
+          <span class="irr-label">个人账户储存额</span>
+          <span class="irr-value" id="account-balance">—</span>
+          <span class="irr-relation" id="annuity-note">—</span>
+        </div>
+
+        <p class="concession-line" id="pension-line" hidden>
+          <span class="concession-tag">缴费</span>
+          <span id="pension-text">—</span>
+        </p>
+
+        <dl class="metrics metrics--three">
+          <div class="metric">
+            <dt>基础养老金</dt>
+            <dd id="basic-pension">—</dd>
+          </div>
+          <div class="metric">
+            <dt>个人账户养老金</dt>
+            <dd id="account-pension">—</dd>
+          </div>
+          <div class="metric">
+            <dt>替代率</dt>
+            <dd id="replacement-rate">—</dd>
+          </div>
+        </dl>
+
+        <div class="formula-block">
+          <p class="formula-label">计算式</p>
+          <pre id="formula" aria-label="养老金计算公式与代入过程">填写参数后计算</pre>
+        </div>
+
+        <p class="mode-note" id="pension-note">按基本养老保险口径估算。</p>
+        <p class="result-error" id="result-error" role="alert"></p>
+        <p class="result-foot">
+          <span class="result-foot-label">口径</span>
+          职工基础养老金 = 退休时计发基数 ×（1 + 平均缴费指数）÷ 2 × 缴费年限 × 1%；
+          个人账户养老金 = 储存额 ÷ 计发月数。居民 = 当地基础养老金 + 储存额 ÷ 139。
+          各省参数不同，以输入为准。
+        </p>
+      </section>
+    </main>
+
+    <section
+      class="schedule-sheet"
+      id="schedule-section"
+      aria-labelledby="schedule-heading"
+    >
+      <div class="schedule-head">
+        <div>
+          <h2 id="schedule-heading">个人账户逐年测算</h2>
+          <p class="schedule-meta" id="schedule-meta">—</p>
+        </div>
+        <button
+          class="schedule-toggle"
+          id="schedule-toggle"
+          type="button"
+          aria-expanded="true"
+          aria-controls="schedule-body"
+        >收起明细</button>
+      </div>
+
+      <div class="schedule-body" id="schedule-body">
+        <dl class="schedule-totals">
+          <div class="schedule-total">
+            <dt>累计划入</dt>
+            <dd id="schedule-total-paid">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>账户储存额</dt>
+            <dd id="schedule-total-balance">—</dd>
+          </div>
+          <div class="schedule-total">
+            <dt>测算年数</dt>
+            <dd id="schedule-total-years">—</dd>
+          </div>
+        </dl>
+
+        <div class="schedule-table-wrap" id="schedule-table-wrap">
+          <table class="schedule-table">
+            <caption class="visually-hidden">个人账户逐年测表明细</caption>
+            <thead>
+              <tr>
+                <th scope="col">年度</th>
+                <th scope="col" id="schedule-col-base">缴费基数</th>
+                <th scope="col" id="schedule-col-contribution">当年划入</th>
+                <th scope="col">年末余额</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body-rows"></tbody>
+          </table>
+        </div>
+        <p class="schedule-note">金额单位：元；当年划入不计当年利息，年末余额按记账利率滚存。</p>
+      </div>
+    </section>
+
+    <footer class="site-foot">
+      <p>输入仅在本机处理，不会上传。</p>
+    </footer>
+  </div>
+
+  <p class="visually-hidden" id="live-status" aria-live="polite"></p>
+  <script src="pension.js" defer></script>
+</body>
+</html>
