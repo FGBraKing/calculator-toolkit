@@ -21,6 +21,10 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+    # starlette.testclient 弃用 httpx 的警告来自上游依赖，等上游适配后再移除
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated:UserWarning",
+]
 
 [tool.ruff]
 line-length = 100

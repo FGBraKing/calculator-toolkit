@@ -20,12 +20,12 @@ jobs:
             slug: macos
           - os: windows-latest
             slug: windows
-          - os: ubuntu-latest
+          - os: ubuntu-2604
             slug: linux
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
 
@@ -51,7 +51,7 @@ jobs:
               ;;
           esac
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: CalculatorToolkit-${{ matrix.slug }}
           path: out/*
@@ -61,9 +61,9 @@ jobs:
     name: release
     needs: build
     if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-2604
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 打包单文件桌面版（macOS / Windows / Linux）。
+# 打包桌面版：macOS 为 .app 包（onedir），Windows / Linux 为单文件可执行。
 # PyInstaller 不支持交叉编译，需在目标系统上运行；CI 用三平台矩阵调用本脚本。
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -21,15 +21,17 @@ case "$(uname -s)" in
     ;;
 esac
 
+# macOS 的 onefile + windowed 组合已被 PyInstaller 弃用（v7.0 将报错），改用 onedir
 FLAGS=()
 case "$OS" in
-  macos) FLAGS=(--windowed --osx-bundle-identifier local.calculator-toolkit) ;;
-  windows) FLAGS=(--noconsole) ;;
+  macos) FLAGS=(--onedir --windowed --osx-bundle-identifier local.calculator-toolkit) ;;
+  windows) FLAGS=(--onefile --noconsole) ;;
+  linux) FLAGS=(--onefile) ;;
 esac
 
 UV_CACHE_DIR="$ROOT/.uv-cache" PYINSTALLER_CONFIG_DIR="$ROOT/.pyinstaller" \
   uv run --with pyinstaller pyinstaller \
-  --noconfirm --clean --onefile \
+  --noconfirm --clean \
   --name CalculatorToolkit \
   ${FLAGS[@]+"${FLAGS[@]}"} \
   --paths . \
@@ -42,7 +44,8 @@ UV_CACHE_DIR="$ROOT/.uv-cache" PYINSTALLER_CONFIG_DIR="$ROOT/.pyinstaller" \
 
 case "$OS" in
   macos)
-    rm -f "$ROOT/dist/CalculatorToolkit"
+    # onedir 模式除 .app 外还会生成同名目录，删掉让 dist 只剩 .app（CI 只打包 .app）
+    rm -rf "$ROOT/dist/CalculatorToolkit"
     ARTIFACT="$ROOT/dist/CalculatorToolkit.app"
     ;;
   windows) ARTIFACT="$ROOT/dist/CalculatorToolkit.exe" ;;
