@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 
-from app import city_params, pension, pension_regions, tax, tool_registry
+from app import city_params, pension, pension_regions, runtime, tax, tool_registry
 from app.calculator import InputError, analyze, to_response
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -355,10 +355,60 @@ def calculate_tool(slug: str, payload: dict[str, str]) -> dict[str, object]:
     return handler(payload)
 
 
+@app.get("/api/app-info")
+def app_info() -> dict[str, str]:
+    """Identity endpoint so a second launch can find and reuse this instance."""
+    return {"app": runtime.INSTANCE_MARKER}
+
+
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 
 if __name__ == "__main__":
+    import argparse
+    import sys
+
     import uvicorn
 
-    uvicorn.run("app.main:app", host="127.0.0.1", port=8765)
+    from app.runtime import (
+        find_running_instance,
+        pick_free_port,
+        wait_for_running_instance,
+    )
+
+    def _serve(port: int) -> None:
+        print(f"计算工具集已启动：http://127.0.0.1:{port} （Ctrl+C 停止）")
+        uvicorn.run("app.main:app", host="127.0.0.1", port=port)
+
+    def _activate_existing(port: int) -> None:
+        print(f"计算工具集已在运行：http://127.0.0.1:{port} （本次启动退出）")
+
+    parser = argparse.ArgumentParser(description="计算工具集开发服务")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        metavar="PORT",
+        help="监听端口；不指定则自动选择空闲端口",
+    )
+    args = parser.parse_args()
+    if args.port:
+        # 显式指定端口时跳过单实例检查，方便并行开多个测试实例
+        _serve(args.port)
+        sys.exit(0)
+
+    with runtime.single_instance_lock() as acquired:
+        if not acquired:
+            # 锁被占：已有实例在运行或正在启动，等它就绪后提示并退出
+            running = wait_for_running_instance()
+            if running is None:
+                sys.exit(1)
+            _activate_existing(running)
+            sys.exit(0)
+        running = find_running_instance()
+        if running is not None:
+            # 锁空闲但端口段里有实例（如 --port 起的并行实例），直接复用
+            _activate_existing(running)
+            sys.exit(0)
+        _serve(pick_free_port())
+        sys.exit(0)
